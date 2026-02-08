@@ -1205,6 +1205,7 @@ NSString *const WMFLanguageVariantAlertsLibraryVersion = @"WMFLanguageVariantAle
         case WMFUserActivityTypeAppearanceSettings:
         case WMFUserActivityTypeNotificationSettings:
         case WMFUserActivityTypeContent:
+        case WMFUserActivityTypeCoordinates:
             return YES;
         case WMFUserActivityTypeSearchResults:
             return [activity wmf_searchTerm] != nil;
@@ -1254,6 +1255,20 @@ NSString *const WMFLanguageVariantAlertsLibraryVersion = @"WMFLanguageVariantAle
                 // For "View on a map" action to succeed, view mode has to be set to map.
                 [[self placesViewController] updateViewModeToMap];
                 [[self placesViewController] showArticleURL:articleURL];
+            }
+        } break;
+        case WMFUserActivityTypeCoordinates: {
+            [self dismissPresentedViewControllers];
+            [self setSelectedIndex:WMFAppTabTypePlaces];
+            [self.currentTabNavigationController popToRootViewControllerAnimated:animated];
+
+            NSNumber *lat = activity.userInfo[@"WMFLatitude"];
+            NSNumber *lon = activity.userInfo[@"WMFLongitude"];
+            NSString *placeName = activity.userInfo[@"WMFPlaceName"];
+
+            if (lat && lon) {
+                [[self placesViewController] updateViewModeToMap];
+                [[self placesViewController] navigateToCoordinateWithName:placeName latitude:lat.doubleValue longitude:lon.doubleValue];
             }
         } break;
         case WMFUserActivityTypeContent: {

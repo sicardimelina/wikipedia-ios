@@ -1256,6 +1256,30 @@ class PlacesViewController: ArticleLocationCollectionViewController, UISearchBar
         viewMode = .map
     }
 
+    @objc public func navigateToCoordinate(name: String?, latitude: CLLocationDegrees, longitude: CLLocationDegrees) {
+        /// This is to avoid a crash because the view might not be fully loaded when this function is called.
+        loadViewIfNeeded()
+
+        let location = CLLocation(latitude: latitude, longitude: longitude)
+        zoomAndPanMapView(toLocation: location)
+        guard name != nil else {
+            return
+        }
+
+        /// This is to setup the navBar as this is set in viewWillAppear and might not be configured yet.
+        if needsConfigNavBar {
+            configureNavigationBar()
+        }
+
+        guard let searchBar = navigationItem.searchController?.searchBar else {
+            return
+        }
+
+        searchBar.text = name
+        /// This is to hide the keyboard if it is present.
+        searchBar.endEditing(true)
+    }
+
     func selectArticlePlace(_ articlePlace: ArticlePlace) {
         mapView.selectAnnotation(articlePlace, animated: articlePlace.identifier != previouslySelectedArticlePlaceIdentifier)
         previouslySelectedArticlePlaceIdentifier = articlePlace.identifier

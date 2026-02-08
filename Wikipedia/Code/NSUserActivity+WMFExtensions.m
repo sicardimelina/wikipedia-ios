@@ -74,6 +74,36 @@ __attribute__((annotate("returns_localized_nsstring"))) static inline NSString *
     return activity;
 }
 
++ (instancetype)wmf_placesActivityWithCoordinatesURL:(NSURL *)activityURL {
+    NSURLComponents *components = [NSURLComponents componentsWithURL:activityURL resolvingAgainstBaseURL:NO];
+    NSNumber *latitude = nil;
+    NSNumber *longitude = nil;
+    NSString *placeName = nil;
+
+    for (NSURLQueryItem *item in components.queryItems) {
+        if ([item.name isEqualToString:@"lat"]) {
+            latitude = @([item.value doubleValue]);
+        } else if ([item.name isEqualToString:@"lon"]) {
+            longitude = @([item.value doubleValue]);
+        } else if ([item.name isEqualToString:@"name"]) {
+            placeName = item.value;
+        }
+    }
+
+    if (latitude == nil || longitude == nil) {
+        return nil;
+    }
+
+    NSUserActivity *activity = [self wmf_pageActivityWithName:@"Coordinates"];
+    NSMutableDictionary *userInfo = activity.userInfo.mutableCopy;
+    [userInfo addEntriesFromDictionary:@{@"WMFLatitude": latitude, @"WMFLongitude": longitude}];
+    if (placeName != nil) {
+        userInfo[@"WMFPlaceName"] = placeName;
+    }
+    activity.userInfo = userInfo;
+    return activity;
+}
+
 + (instancetype)wmf_exploreViewActivity {
     NSUserActivity *activity = [self wmf_pageActivityWithName:@"Explore"];
     return activity;
@@ -120,6 +150,8 @@ __attribute__((annotate("returns_localized_nsstring"))) static inline NSString *
         return [self wmf_exploreViewActivity];
     } else if ([url.host isEqualToString:@"places"]) {
         return [self wmf_placesActivityWithURL:url];
+    } else if ([url.host isEqualToString:@"coordinates"]) {
+        return [self wmf_placesActivityWithCoordinatesURL:url];
     } else if ([url.host isEqualToString:@"saved"]) {
         return [self wmf_savedPagesViewActivity];
     } else if ([url.host isEqualToString:@"search"]) {
@@ -208,6 +240,8 @@ __attribute__((annotate("returns_localized_nsstring"))) static inline NSString *
             return WMFUserActivityTypeExplore;
         } else if ([page isEqualToString:@"Places"]) {
             return WMFUserActivityTypePlaces;
+        } else if ([page isEqualToString:@"Coordinates"]) {
+            return WMFUserActivityTypeCoordinates;
         } else if ([page isEqualToString:@"Saved"]) {
             return WMFUserActivityTypeSavedPages;
         } else if ([page isEqualToString:@"Search"]) {
